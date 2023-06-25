@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Show SVG on Button Click</title>
+  <style>
+    .svg-container {
+      display: inline-block;
+      margin: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    .options-menu {
+      margin-top: 5px;
+    }
+    .option {
+      cursor: pointer;
+      padding: 5px;
+      background-color: #f0f0f0;
+      border-radius: 3px;
+    }
+    #svg-list {
+      max-height: 800px;
+      max-width: 1200px;
+      overflow-y: auto;
+    }
+    .row-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .child-svg-container {
+      margin-left: 10px;
+    }
+
+  </style>
+</head>
+<body>
+<h1>SVG Whiteboard</h1>
+
+<div>
+  <label for="svg-name-input">Enter SVG Name:</label>
+  <input type="text" id="svg-name-input">
+  <button onclick="showSVG()">Show SVG</button>
+  <button onclick="saveSVGs()">Save SVGs</button>
+</div>
+
+<div id="svg-list"></div>
+
+<script src="role_catagory.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const svgListContainer = document.getElementById('svg-list');
+    svgList.forEach(svg => {
+      const svgContainer = createSVGContainer(svg.id, svg.name, svg.type, svg.content);
+      svgListContainer.appendChild(svgContainer);
+    });
+
+    const svgContainers = document.querySelectorAll('.svg-container');
+    svgContainers.forEach(svgContainer => {
+      const optionsMenu = svgContainer.querySelector('.options-menu');
+      const addChildOption = document.createElement('div');
+      addChildOption.textContent = 'Add Child';
+      addChildOption.classList.add('option');
+      optionsMenu.appendChild(addChildOption);
+      addChildOption.addEventListener('click', addChild);
+    });
+  });
+</script>
+</body>
+</html>
