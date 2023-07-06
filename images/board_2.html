@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RBAC Whiteboard</title>
+  <style>
+    #canvas {
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+<button id="drawRectangleButton">Draw Rectangle</button>
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script>
+  // Get the canvas element
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+
+  // Variables to track the drawing state
+  let isDrawing = false;
+  let startX, startY;
+  let selectedShape = null;
+  let shapes = [];
+
+  // Get the draw rectangle button element
+  const drawRectangleButton = document.getElementById('drawRectangleButton');
+
+  // Event listeners for mouse interactions
+  drawRectangleButton.addEventListener('click', enableRectangleDrawing);
+  canvas.addEventListener('mousedown', handleMouseDown);
+  canvas.addEventListener('mousemove', handleMouseMove);
+  canvas.addEventListener('mouseup', handleMouseUp);
+  canvas.addEventListener('mouseleave', handleMouseLeave);
+  canvas.addEventListener('dblclick', handleDoubleClick);
+
+  // Enable rectangle drawing
+  function enableRectangleDrawing() {
+    isDrawing = true;
+  }
+
+  // Start drawing
+  function handleMouseDown(event) {
+    if (!isDrawing) return;
+
+    const x = event.clientX - canvas.offsetLeft;
+    const y = event.clientY - canvas.offsetTop;
+    startX = x;
+    startY = y;
+  }
+
+  // Handle mouse movement
+  function handleMouseMove(event) {
+    if (!isDrawing) return;
+
+    const x = event.clientX - canvas.offsetLeft;
+    const y = event.clientY - canvas.offsetTop;
+    drawRectangle(startX, startY, x - startX, y - startY);
+  }
+
+  // Stop drawing
+  function handleMouseUp() {
+    if (!isDrawing) return;
+
+    isDrawing = false;
+    const x = event.clientX - canvas.offsetLeft;
+    const y = event.clientY - canvas.offsetTop;
+    const width = x - startX;
+    const height = y - startY;
+    addRectangle(startX, startY, width, height);
+  }
+
+  // Stop drawing when leaving the canvas
+  function handleMouseLeave() {
+    if (!isDrawing) return;
+
+    isDrawing = false;
+  }
+
+  function handleDoubleClick(event) {
+    const x = event.clientX - canvas.offsetLeft;
+    const y = event.clientY - canvas.offsetTop;
+    selectedShape = findSelectedShape(x, y);
+
+    if (selectedShape) {
+      const label = prompt('Enter a label for the rectangle:');
+      if (label) {
+        selectedShape.label = label;
+        redrawCanvas();
+      }
+    }
+  }
+
+  function redrawCanvas() {
+    for (let i = 0; i < shapes.length; i++) {
+      const shape = shapes[i];
+      context.beginPath();
+      context.rect(shape.x, shape.y, shape.width, shape.height);
+      context.stroke();
+      if (shape.label) {
+        context.font = '12px Arial';
+        context.fillText(shape.label, shape.x + 5, shape.y + 15);
+      }
+    }
+  }
+
+  function findSelectedShape(x, y) {
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      const shape = shapes[i];
+      if (
+              x >= shape.x &&
+              x <= shape.x + shape.width &&
+              y >= shape.y &&
+              y <= shape.y + shape.height
+      ) {
+        return shape;
+      }
+    }
+    return null;
+  }
+
+  // Draw a rectangle
+  function drawRectangle(x, y, width, height) {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    redrawCanvas();
+    context.beginPath();
+    context.rect(x, y, width, height);
+    context.stroke();
+  }
+
+  // Add a rectangle shape
+  function addRectangle(x, y, width, height) {
+    shapes.push({ x, y, width, height });
+    redrawCanvas();
+  }
+</script>
+</body>
+</html>

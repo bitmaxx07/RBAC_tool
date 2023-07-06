@@ -28,6 +28,7 @@ function showSVG() {
     const svgContainer = document.createElement('div');
     svgContainer.classList.add('svg-container');
     svgContainer.setAttribute('data-id', svgId);
+    svgContainer.setAttribute('node-name', svgName);
 
     // Create the SVG element
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -106,6 +107,7 @@ function addChild(event) {
     const childSvgContainer = document.createElement('div');
     childSvgContainer.classList.add('svg-container');
     childSvgContainer.setAttribute('data-id', childSvgId);
+    childSvgContainer.setAttribute('node-name', childName);
 
     const childSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     childSvg.setAttribute('id', childSvgId);
@@ -116,7 +118,7 @@ function addChild(event) {
     const childText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     childText.setAttribute('x', '10');
     childText.setAttribute('y', '20');
-    childText.textContent = childName;
+    childText.textContent = childName + ":" + svgContainer.getAttribute('node-name');
 
     childSvg.appendChild(childText);
     childSvgContainer.appendChild(childSvg);
@@ -132,12 +134,17 @@ function addChild(event) {
     deleteOption.textContent = 'Delete';
     deleteOption.classList.add('option');
 
+    /*const deleteChildOption = document.createElement('div');
+    deleteOption.textContent = 'Delete child';
+    deleteChildOption.classList.add('option');*/
+
     optionsMenu.appendChild(addChildOption);
     optionsMenu.appendChild(deleteOption);
     childSvgContainer.appendChild(optionsMenu);
 
     addChildOption.addEventListener('click', addChild);
     deleteOption.addEventListener('click', deleteSVG);
+    // deleteChildOption.addEventListener('click', deleteSVG);
 
     const motherSvgElement = document.getElementById(motherSvgId);
     const motherSvgRect = motherSvgElement.getBoundingClientRect();
