@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">
+    <text id="text-id" x="10" y="25">Default endpoint</text>
+    <rect class="endpoint-shape" x="10" y="10" width="90" height="45"
+    style="fill:none;stroke:black"/>
+</svg>
