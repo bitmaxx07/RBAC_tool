@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #draggable-svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      cursor: move;
+    }
+    .tool {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+<div id="draggable-svg">
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="100">
+    <text id="text-id" x="25" y="50">Default category</text>
+    <polygon class="category-shape" points="75,0 150,50 75,100 0,50"
+             style="fill:none;stroke:black"/>
+  </svg>
+</div>
+<div id="toolkit">
+  <button class="tool" onclick="addShape('category')">
+    Add Category
+  </button>
+  <button class="tool" onclick="addShape('endpoint')">
+    Add Endpoint
+  </button>
+</div>
+
+<script>
+  let categoryList = [];
+  function makeDraggable(element) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    // let shape = element.querySelector(".shape") || element.querySelector(".category-shape");
+
+    function dragMouseDown(e) {
+      e = e || window.event;
+      e.preventDefault();
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+      e = e || window.event;
+      e.preventDefault();
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      element.style.top = (element.offsetTop - pos2) + "px";
+      element.style.left = (element.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
+
+    element.onmousedown = dragMouseDown;
+  }
+
+  const draggableSvg = document.getElementById('draggable-svg');
+  makeDraggable(draggableSvg);
+
+  function addShape(tool) {
+    let name = prompt(`Enter the name for the ${tool}:`);
+    if (tool === "category" && categoryList.some(c => c.name === name)) {
+      alert(`The category ${name} already exists!`);
+      return;
+    }
+    if (name === null) {
+      return;
+    }
+
+    let shapeContainer = document.createElement("div");
+    shapeContainer.style.position = "absolute";
+    shapeContainer.style.left = "100px";
+    shapeContainer.style.top = "100px";
+
+    let shape = document.createElement("div");
+    shape.className = "shape";
+    if (tool === "category") {
+      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="100">' +
+              '<text id="text-id" x="25" y="50">' + name + '</text>' +
+              '<polygon class="category-shape" points="75,0 150,50 75,100 0,50" style="fill:none;stroke:black"/>' +
+              '</svg>';
+      categoryList.push({name: name, content: shape.innerHTML});
+    }
+    if (tool === "endpoint") {
+      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">' +
+        '<text id="text-id" x="10" y="25">' + name + '</text>' +
+        '<rect class="endpoint-shape" x="10" y="10" width="90" height="45" style="fill:none;stroke:black"/>' +
+        '</svg>';
+    }
+
+
+    shapeContainer.appendChild(shape);
+    document.body.appendChild(shapeContainer);
+    makeDraggable(shapeContainer);
+  }
+
+</script>
+</body>
+</html>
