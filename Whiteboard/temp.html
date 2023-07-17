@@ -267,7 +267,6 @@
           userList[userIndex].name = newAttribute;
         }
       }
-
     }
     cleanupContextMenu();
   }
@@ -282,7 +281,7 @@
   document.addEventListener("contextmenu", handleContextMenu);
 
   document.addEventListener("mousedown", function (event) {
-    if (event.button !== 2) { // Left click
+    if (event.button !== 2) {
       hideContextMenu();
     }
   });
