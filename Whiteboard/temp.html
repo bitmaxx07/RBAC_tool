@@ -169,11 +169,10 @@
     e.preventDefault();
 
     clickedShape = e.target.closest(".shape");
+    console.log(clickedShape)
     if (clickedShape === null) {
       return;
     }
-
-    console.log(clickedShape.type);
 
     const contextMenu = document.createElement("div");
     contextMenu.className = "context-menu";
@@ -181,6 +180,7 @@
       contextMenu.innerHTML = '<ul>' +
               '<li onclick="renameShape()">Rename</li>' +
               '<li onclick="deleteShape()">Delete</li>' +
+              '<li onclick="hideContextMenu()">Hide Menu</li>' +
               '</ul>';
     }
 
@@ -190,17 +190,19 @@
               '<li onclick="deleteShape()">Delete</li>' +
               '<li onclick="showAttribute()">Show Attribute</li>' +
               '<li onclick="configureAttribute()">Configure Attribute</li>' +
+              '<li onclick="hideContextMenu()">Hide Menu</li>' +
               '</ul>';
     }
-
 
     contextMenu.style.position = "absolute";
     contextMenu.style.left = e.clientX + "px";
     contextMenu.style.top = e.clientY + "px";
+    contextMenu.id = "contextMenu";
     document.body.appendChild(contextMenu);
   }
 
   function renameShape() {
+    console.log("rename");
     const newName = prompt("Enter the new name for the shape:", clickedShape.textContent);
     if (newName !== null) {
       const oldName = clickedShape.textContent;
@@ -228,7 +230,7 @@
   }
 
   function deleteShape() {
-    if (confirm("Are you sure you want to delete this shape?")) {
+    if (confirm("Are you sure to delete this shape?")) {
       const shapeName = clickedShape.textContent;
       clickedShape.parentElement.remove();
 
@@ -259,7 +261,7 @@
   function configureAttribute() {
     const newAttribute = prompt("Please insert the new attribute of the user:", clickedShape.attribute);
     if (newAttribute !== null) {
-      if (confirm(`Are you sure to configure the new attribute as ${newAttribute} on ${clickedShape.name}`)) {
+      if (confirm(`Are you sure to configure the new attribute as ${newAttribute} from ${clickedShape.attribute} on ${clickedShape.name}`)) {
         const oldAttribute = clickedShape.attribute;
         clickedShape.attribute = newAttribute;
         const userIndex = userList.findIndex(user => user.attribute === oldAttribute);
@@ -280,10 +282,15 @@
 
   document.addEventListener("contextmenu", handleContextMenu);
 
-  document.addEventListener("mousedown", function (event) {
+  /*document.addEventListener("mousedown", function (event) {
     if (event.button !== 2) {
+      // console.log("hide");
       hideContextMenu();
     }
+  });*/
+
+  document.addEventListener("click", function (event) {
+    hideContextMenu();
   });
 
 </script>
