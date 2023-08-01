@@ -27,6 +27,12 @@
     .context-menu li:hover {
       background-color: #f0f0f0;
     }
+    #toolkit {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10001;
+    }
 
   </style>
 </head>
@@ -47,12 +53,19 @@
   let roleList = [];
   let operationList = [];
   let userList = [];
+  let connections = [];
+
   function makeDraggable(element) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    element.style.position = "absolute";
+    element.style.left = "100px";
+    element.style.top = "100px";
 
     function dragMouseDown(e) {
       e = e || window.event;
       e.preventDefault();
+      e.stopPropagation();
       pos3 = e.clientX;
       pos4 = e.clientY;
       document.onmouseup = closeDragElement;
@@ -60,7 +73,7 @@
     }
 
     function elementDrag(e) {
-      if (e.button === 2) {
+      /*if (e.button === 2) {
         const contextMenu = document.getElementById("contextMenu");
         contextMenu.style.display = "block";
         contextMenu.style.left = e.clientX + "px";
@@ -75,13 +88,23 @@
         pos4 = e.clientY;
         element.style.top = (element.offsetTop - pos2) + "px";
         element.style.left = (element.offsetLeft - pos1) + "px";
-      }
+      }*/
+      e = e || window.event;
+      e.preventDefault();
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      element.style.top = element.offsetTop - pos2 + "px";
+      element.style.left = element.offsetLeft - pos1 + "px";
 
+      // updateConnections();
     }
 
     function closeDragElement() {
       document.onmouseup = null;
       document.onmousemove = null;
+      updateConnections();
     }
 
     element.onmousedown = dragMouseDown;
@@ -103,13 +126,14 @@
 
     let shapeContainer = document.createElement("div");
     shapeContainer.style.position = "absolute";
+    shapeContainer.style.zIndex = "10";
     shapeContainer.style.left = "100px";
     shapeContainer.style.top = "100px";
 
     let shape = document.createElement("div");
     shape.className = "shape";
     if (tool === "role") {
-      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="100">' +
+      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="150" height="100">' +
               '<text id="text-id" x="25" y="50">' + name + '</text>' +
               '<polygon class="role-shape" points="75,0 150,50 75,100 0,50" style="fill:none;stroke:black"/>' +
               '</svg>';
@@ -117,9 +141,9 @@
       roleList.push({name: name, type: "role", mother: ""});
     }
     if (tool === "user") {
-      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">' +
+      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="90" height="45">' +
         '<text id="text-id" x="10" y="40">' + name + '</text>' +
-        '<rect class="user-shape" x="10" y="10" width="90" height="45" style="fill:none;stroke:black"/>' +
+        '<rect class="user-shape" x="0" y="0" width="90" height="45" style="fill:none;stroke:black"/>' +
         '</svg>';
       shape.type = "user";
       shape.attribute = "";
@@ -128,13 +152,16 @@
     if (tool === "operation") {
       shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">' +
         '<text id="text-id" x="10" y="50">' + name + '</text>' +
-        '<rect class="operation-shape" x="10" y="10" width="80" height="80" style="fill:none;stroke:black"/> </svg>';
+        '<rect class="operation-shape" x="0" y="0" width="100" height="100" style="fill:none;stroke:black"/> </svg>';
       shape.type = "operation";
       operationList.push({name: name, type: "operation", mother: ""});
     }
 
 
     shapeContainer.appendChild(shape);
+
+    shapeContainer.classList.add(`shape-${name}`);
+
     document.body.appendChild(shapeContainer);
     makeDraggable(shapeContainer);
   }
@@ -181,6 +208,7 @@
               '<li onclick="renameShape()">Rename</li>' +
               '<li onclick="deleteShape()">Delete</li>' +
               '<li onclick="hideContextMenu()">Hide Menu</li>' +
+              '<li onclick="addChildConnection()">Add Child Connection</li>' +
               '</ul>';
     }
 
@@ -279,6 +307,120 @@
       contextMenu.remove();
     }
   }
+
+  function addChildConnection() {
+    if (clickedShape === null) {
+      return;
+    }
+
+    const finishPoint = prompt("Enter the name of the child to connect:");
+    if (finishPoint === null) {
+      return;
+    }
+
+    const targetShape = document.querySelector(`.shape-${finishPoint}`);
+
+    if (!targetShape) {
+      alert(`Child with the name "${finishPoint}" not found!`);
+      return;
+    }
+
+    const clickedShapeRect = clickedShape.getBoundingClientRect();
+    const targetShapeRect = targetShape.getBoundingClientRect();
+
+    const startX = clickedShapeRect.x > targetShapeRect.x ? clickedShapeRect.left : clickedShapeRect.right;
+    const startY = clickedShapeRect.top + clickedShapeRect.height / 2;
+    const endX = clickedShapeRect.x > targetShapeRect.x ? targetShapeRect.right : targetShapeRect.left;
+    const endY = targetShapeRect.top + targetShapeRect.height / 2;
+
+    const dx = endX - startX;
+    const dy = endY - startY;
+    // const length = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx);
+
+    const svgLine = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgLine.setAttribute("width", "100%");
+    svgLine.setAttribute("height", "100%");
+    svgLine.style.position = "absolute";
+    svgLine.style.top = "0";
+    svgLine.style.left = "0";
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", startX);
+    line.setAttribute("y1", startY);
+    line.setAttribute("x2", endX);
+    line.setAttribute("y2", endY);
+    line.setAttribute("stroke", "black");
+    line.setAttribute("stroke-width", "2");
+
+    const arrowSize = 10;
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    arrow.setAttribute(
+            "points",
+            `${endX},${endY} ${endX - arrowSize * Math.cos(angle - Math.PI / 6)},${
+                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+            } ${endX - arrowSize * Math.cos(angle + Math.PI / 6)},${
+                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+            }`
+    );
+    arrow.setAttribute("fill", "black");
+
+    svgLine.appendChild(line);
+    svgLine.appendChild(arrow);
+
+    document.body.appendChild(svgLine);
+
+    const connection = {
+      startX,
+      startY,
+      endX,
+      endY,
+      line: svgLine,
+      from: clickedShape,
+      to: targetShape,
+    };
+
+    connections.push(connection);
+
+    cleanupContextMenu();
+    clickedShape = null;
+
+  }
+
+  function updateConnections() {
+    console.log(connections);
+    const arrowSize = 10;
+    for (const connection of connections) {
+      const { startX, startY, endX, endY, line } = connection;
+      const fromRect = connection.from.getBoundingClientRect();
+      const toRect = connection.to.getBoundingClientRect();
+
+      const newStartX = fromRect.x > toRect.x ? fromRect.left: fromRect.right;
+      const newStartY = fromRect.top + fromRect.height / 2;
+      const newEndX = fromRect.x > toRect.x ? toRect.right: toRect.left;
+      const newEndY = toRect.top + toRect.height / 2;
+
+      const dx = newEndX - newStartX;
+      const dy = newEndY - newStartY;
+      // const length = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx);
+
+      line.querySelector("line").setAttribute("x1", newStartX);
+      line.querySelector("line").setAttribute("y1", newStartY);
+      line.querySelector("line").setAttribute("x2", newEndX);
+      line.querySelector("line").setAttribute("y2", newEndY);
+      line.querySelector("polygon").setAttribute(
+              "points",
+              `${newEndX},${newEndY} ${newEndX - arrowSize * Math.cos(angle - Math.PI / 6)},${
+                      newEndY - arrowSize * Math.sin(angle - Math.PI / 6)
+              } ${newEndX - arrowSize * Math.cos(angle + Math.PI / 6)},${
+                      newEndY - arrowSize * Math.sin(angle + Math.PI / 6)
+              }`
+      );
+    }
+  }
+
+  // document.addEventListener("mousemove", updateConnections);
 
   document.addEventListener("contextmenu", handleContextMenu);
 
