@@ -269,6 +269,16 @@
       } else if (clickedShape.type === "user") {
         userList = userList.filter(user => user.name !== shapeName);
       }
+
+      connections = connections.filter(connection => {
+        const {from, to} = connection;
+        return !(from === clickedShape || to === clickedShape);
+      });
+
+      connections.forEach(connection => {
+        connection.line.remove();
+      });
+      connections = connections.filter(connection => connection.from !== clickedShape && connection.to !== clickedShape);
     }
     cleanupContextMenu();
   }
@@ -345,6 +355,8 @@
     svgLine.style.top = "0";
     svgLine.style.left = "0";
 
+    // svgLine.className = "connection";
+
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", startX);
     line.setAttribute("y1", startY);
@@ -376,7 +388,7 @@
       endX,
       endY,
       line: svgLine,
-      from: clickedShape,
+      from: clickedShape.parentNode,
       to: targetShape,
     };
 
@@ -390,6 +402,21 @@
   function updateConnections() {
     console.log(connections);
     const arrowSize = 10;
+
+    /*connections = connections.filter(connection => {
+      const { from, to } = connection;
+      const fromExists = document.contains(from);
+      const toExists = document.contains(to);
+      return fromExists && toExists;
+    });
+
+    const existingLines = document.querySelectorAll("svg");
+    existingLines.forEach(line => {
+      if (!connections.some(connection => connection.line === line)) {
+        line.remove();
+      }
+    });*/
+
     for (const connection of connections) {
       const { startX, startY, endX, endY, line } = connection;
       const fromRect = connection.from.getBoundingClientRect();
