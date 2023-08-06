@@ -196,11 +196,30 @@
     e.preventDefault();
 
     clickedShape = e.target.closest(".shape");
-    console.log(clickedShape)
-    if (clickedShape === null) {
+
+    // CHECK THIS
+    let clickedLine = e.target.closest(".svgLine");
+    console.log(clickedLine);
+
+    // console.log(clickedShape)
+    if (clickedShape === null && clickedLine === null) {
       return;
     }
 
+    if (clickedShape !== null) {
+      showShapeContextMenu(e, clickedShape);
+      return;
+    }
+
+    if (clickedLine != null) {
+      showConnectionContextMenu(e, clickedLine);
+      return;
+    }
+
+    hideContextMenu();
+  }
+
+  function showShapeContextMenu(e, clickedShape) {
     const contextMenu = document.createElement("div");
     contextMenu.className = "context-menu";
     if (clickedShape.type === "role" || clickedShape.type === "operation") {
@@ -377,8 +396,12 @@
     );
     arrow.setAttribute("fill", "black");
 
+    line.addEventListener("contextmenu", (e) => showConnectionContextMenu(e, connection));
+
     svgLine.appendChild(line);
     svgLine.appendChild(arrow);
+
+    // svgLine.addEventListener("contextmenu", (e) => handleConnectionContextMenu(e, connection));
 
     document.body.appendChild(svgLine);
 
@@ -397,6 +420,42 @@
     cleanupContextMenu();
     clickedShape = null;
 
+  }
+
+  function showConnectionContextMenu(e, connection) {
+    e.preventDefault();
+
+    const contextMenu = document.createElement("div");
+    contextMenu.className = "context-menu";
+    contextMenu.innerHTML = '<ul>' +
+            `<li onclick="deleteConnection(${connections.indexOf(connection)})">Delete Connection</li>` +
+            '<li onclick="cleanupConnectionContextMenu()">Hide Menu</li> ' +
+            '</ul>';
+
+    contextMenu.style.position = "absolute";
+    contextMenu.style.left = e.clientX + "px";
+    contextMenu.style.top = e.clientY + "px";
+    contextMenu.id = "connectionContextMenu";
+    document.body.appendChild(contextMenu);
+
+  }
+
+  function deleteConnection(index) {
+    console.log(connections);
+    if (index !== -1) {
+      const connection = connections[index];
+      console.log(connection);
+      connection.line.remove();
+      connections.splice(index, 1);
+    }
+    cleanupConnectionContextMenu();
+  }
+
+  function cleanupConnectionContextMenu() {
+    const contextMenu = document.querySelector("#connectContextMenu");
+    if (contextMenu) {
+      contextMenu.remove();
+    }
   }
 
   function updateConnections() {
@@ -460,6 +519,7 @@
 
   document.addEventListener("click", function (event) {
     hideContextMenu();
+    cleanupConnectionContextMenu();
   });
 
 </script>
