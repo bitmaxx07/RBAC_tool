@@ -138,7 +138,10 @@
               '<polygon class="role-shape" points="75,0 150,50 75,100 0,50" style="fill:none;stroke:black"/>' +
               '</svg>';
       shape.type = "role";
-      roleList.push({name: name, type: "role", mother: ""});
+      shape.name = "role-" + name;
+
+      //shapeContainer.classList.add(`shape-role-${name}`);
+      roleList.push({name: "role-" + name, type: "role", mother: ""});
     }
     if (tool === "user") {
       shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="90" height="45">' +
@@ -147,14 +150,20 @@
         '</svg>';
       shape.type = "user";
       shape.attribute = "";
-      userList.push({name: name, type: "user", attribute: shape.attribute, mother: ""});
+      shape.name = "user-" + name;
+
+      //shapeContainer.classList.add(`shape-user-${name}`);
+      userList.push({name: "user-" + name, type: "user", attribute: shape.attribute, mother: ""});
     }
     if (tool === "operation") {
       shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">' +
         '<text id="text-id" x="10" y="50">' + name + '</text>' +
         '<rect class="operation-shape" x="0" y="0" width="100" height="100" style="fill:none;stroke:black"/> </svg>';
       shape.type = "operation";
-      operationList.push({name: name, type: "operation", mother: ""});
+      shape.name = "operation-" + name;
+
+      //shapeContainer.classList.add(`shape-operation-${name}`);
+      operationList.push({name: "operation-" + name, type: "operation", mother: ""});
     }
 
 
@@ -199,7 +208,7 @@
 
     // CHECK THIS
     let clickedLine = e.target.closest(".svgLine");
-    console.log(clickedLine);
+    // console.log(clickedLine);
 
     // console.log(clickedShape)
     if (clickedShape === null && clickedLine === null) {
@@ -249,7 +258,7 @@
   }
 
   function renameShape() {
-    console.log("rename");
+    // console.log("rename");
     const newName = prompt("Enter the new name for the shape:", clickedShape.textContent);
     if (newName !== null) {
       const oldName = clickedShape.textContent;
@@ -347,12 +356,44 @@
       return;
     }
 
-    const targetShape = document.querySelector(`.shape-${finishPoint}`);
+    let targetShape = document.querySelector(`.shape-${finishPoint}`);
+
+    console.log(targetShape.getElementsByClassName('shape'));
 
     if (!targetShape) {
       alert(`Child with the name "${finishPoint}" not found!`);
       return;
     }
+
+    let roleIndex;
+    if (targetShape.getElementsByClassName('shape')[0].type === "role") {
+      //targetShape = document.querySelector(`.shape-role-${finishPoint}`);
+      console.log(targetShape.getElementsByClassName('shape')[0].name);
+      console.log(roleList);
+      roleIndex = roleList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
+      console.log(roleIndex);
+      roleList[roleIndex].mother = clickedShape.name;
+    }
+
+    let userIndex;
+    if (targetShape.getElementsByClassName('shape')[0].type === "user") {
+      //targetShape = document.querySelector(`.shape-user-${finishPoint}`);
+      userIndex = userList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
+      console.log(userIndex);
+      userList[userIndex].mother = clickedShape.name;
+    }
+
+    let operationIndex;
+    if (targetShape.getElementsByClassName('shape')[0].type === "operation") {
+      //targetShape = document.querySelector(`.shape-operation-${finishPoint}`);
+      operationIndex = operationList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
+      console.log(operationIndex);
+      operationList[operationIndex].mother = clickedShape.name;
+    }
+
+    console.log(roleList);
+    console.log(userList);
+    console.log(operationList);
 
     const clickedShapeRect = clickedShape.getBoundingClientRect();
     const targetShapeRect = targetShape.getBoundingClientRect();
@@ -441,10 +482,10 @@
   }
 
   function deleteConnection(index) {
-    console.log(connections);
+    // console.log(connections);
     if (index !== -1) {
       const connection = connections[index];
-      console.log(connection);
+      // console.log(connection);
       connection.line.remove();
       connections.splice(index, 1);
     }
@@ -459,7 +500,7 @@
   }
 
   function updateConnections() {
-    console.log(connections);
+    // console.log(connections);
     const arrowSize = 10;
 
     /*connections = connections.filter(connection => {
