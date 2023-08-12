@@ -485,8 +485,30 @@
     // console.log(connections);
     if (index !== -1) {
       const connection = connections[index];
-      // console.log(connection);
+      console.log(connection);
       connection.line.remove();
+      // Assume a node can only have one mother
+      console.log(document.getElementsByClassName(connection.to.className)[0].getElementsByClassName('shape')[0].type);
+      let toShape = document.getElementsByClassName(connection.to.className)[0].getElementsByClassName('shape')[0];
+
+      let roleIndex;
+      if (toShape.type === "role") {
+        roleIndex = roleList.findIndex((obj => obj.name === toShape.name));
+        roleList[roleIndex].mother = "";
+      }
+
+      let operationIndex;
+      if (toShape.type === "operation") {
+        operationIndex = operationList.findIndex((obj => obj.name === toShape.name));
+        operationList[operationIndex].mother = "";
+      }
+
+      let userIndex;
+      if (toShape.type === "user") {
+        userIndex = userList.findIndex((obj => obj.name === toShape.name));
+        userList[userIndex].mother = "";
+      }
+
       connections.splice(index, 1);
     }
     cleanupConnectionContextMenu();
