@@ -115,12 +115,16 @@
 
   function addShape(tool) {
     let name = prompt(`Enter the name for the ${tool}:`);
-    if (tool === "role" && roleList.some(c => c.name === name)) {
+    if (tool === "role" && roleList.some(c => c.name.split('-')[1] === name)) {
       alert(`The role ${name} already exists!`);
       return;
     }
-    if (tool === "operation" && operationList.some(o => o.name === name)) {
+    if (tool === "operation" && operationList.some(o => o.name.split('-')[1] === name)) {
       alert(`The operation ${name} already exists!`);
+      return;
+    }
+    if (tool === "user" && userList.some(o => o.name.split('-')[1] === name)) {
+      alert(`The user ${name} already exists!`);
       return;
     }
     if (name === null) {
@@ -180,25 +184,31 @@
 
   function rename(shape, newName) {
     if (shape.type === "role") {
-      if (roleList.some(r => r.name === newName)) {
+      if (roleList.some(r => r.name === "role-" + newName)) {
         alert(`The role ${newName} already exists!`);
         return;
       }
       else {
-        shape.name = newName;
+        shape.name = "role-" + newName;
       }
     }
     if (shape.type === "operation") {
-      if (operationList.some(r => r.name === newName)) {
+      if (operationList.some(r => r.name === "operation-" + newName)) {
         alert(`The operation ${newName} already exists!`);
         return;
       }
       else {
-        shape.name = newName;
+        shape.name = "operation-" + newName;
       }
     }
-    else {
-      shape.name = newName;
+    else if (shape.type === "user") {
+      if (userList.some(r => r.name === "user-" + newName)) {
+        alert(`The user ${newName} already exists!`);
+        return;
+      }
+      else {
+        shape.name = "user-" + newName;
+      }
     }
   }
 
@@ -264,33 +274,38 @@
     // console.log("rename");
     const newName = prompt("Enter the new name for the shape:", clickedShape.textContent);
     if (newName !== null) {
-      const oldName = clickedShape.textContent;
+      // const oldName = clickedShape.textContent;
+      const oldName = clickedShape.name;
       rename(clickedShape, newName);
       clickedShape.querySelector("#text-id").textContent = newName;
 
       if (clickedShape.type === "role") {
         const roleIndex = roleList.findIndex(role => role.name === oldName);
         if (roleIndex !== -1) {
-          roleList[roleIndex].name = newName;
+          roleList[roleIndex].name = "role-" + newName;
         }
       } else if (clickedShape.type === "operation") {
         const operationIndex = operationList.findIndex(operation => operation.name === oldName);
         if (operationIndex !== -1) {
-          operationList[operationIndex].name = newName;
+          operationList[operationIndex].name = "operation-" + newName;
         }
       } else if (clickedShape.type === "user") {
         const userIndex = userList.findIndex(user => user.name === oldName);
         if (userIndex !== -1) {
-          userList[userIndex].name = newName;
+          userList[userIndex].name = "user-" + newName;
         }
       }
+
+      const shapeContainer = clickedShape.parentNode;
+      shapeContainer.classList.remove(`shape-${oldName}`);
+      shapeContainer.classList.add(`shape-${clickedShape.textContent}`);
     }
     cleanupContextMenu();
   }
 
   function deleteShape() {
     if (confirm("Are you sure to delete this shape?")) {
-      const shapeName = clickedShape.textContent;
+      const shapeName = clickedShape.name;
       clickedShape.parentElement.remove();
 
       if (clickedShape.type === "role") {
@@ -345,6 +360,8 @@
       if (confirm(`Are you sure to configure the new attribute as ${newAttribute} from ${clickedShape.attribute} on ${clickedShape.name}`)) {
         const oldAttribute = clickedShape.attribute;
         clickedShape.attribute = newAttribute;
+        // TODO: CHECK HERE
+        // POTENTIAL PROBLEM HERE!
         const userIndex = userList.findIndex(user => user.attribute === oldAttribute);
         if (userIndex !== -1) {
           userList[userIndex].attribute = newAttribute;
@@ -371,6 +388,11 @@
       return;
     }
 
+    if (clickedShape.name.split('-')[1] === finishPoint) {
+      alert("Cannot establish connection to the shape itself!")
+      return;
+    }
+
     let targetShape = document.querySelector(`.shape-${finishPoint}`);
 
     // console.log(targetShape.getElementsByClassName('shape'));
@@ -386,7 +408,8 @@
       // console.log(targetShape.getElementsByClassName('shape')[0].name);
       // console.log(roleList);
       roleIndex = roleList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
-      // console.log(roleIndex);
+      console.log(targetShape.getElementsByClassName('shape')[0].name);
+      console.log(roleIndex);
       roleList[roleIndex].mother = clickedShape.name;
     }
 
