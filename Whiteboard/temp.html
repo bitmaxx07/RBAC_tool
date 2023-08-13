@@ -47,6 +47,9 @@
   <button class="tool" onclick="addShape('user')">
     Add User
   </button>
+  <button class="tool" onclick="saveFile()">
+    Save File
+  </button>
 </div>
 
 <script>
@@ -298,6 +301,18 @@
         userList = userList.filter(user => user.name !== shapeName);
       }
 
+      let roleIndex;
+      roleIndex = roleList.findIndex((obj => obj.mother === clickedShape.name));
+      roleList[roleIndex].mother = "";
+
+      let operationIndex;
+      operationIndex = operationList.findIndex((obj => obj.mother === clickedShape.name));
+      operationList[operationIndex].mother = "";
+
+      let userIndex;
+      userIndex = userList.findIndex((obj => obj.mother === clickedShape.name));
+      userList[userIndex].mother = "";
+
       connections = connections.filter(connection => {
         const {from, to} = connection;
         return !(from === clickedShape || to === clickedShape);
@@ -332,7 +347,7 @@
         clickedShape.attribute = newAttribute;
         const userIndex = userList.findIndex(user => user.attribute === oldAttribute);
         if (userIndex !== -1) {
-          userList[userIndex].name = newAttribute;
+          userList[userIndex].attribute = newAttribute;
         }
       }
     }
@@ -358,7 +373,7 @@
 
     let targetShape = document.querySelector(`.shape-${finishPoint}`);
 
-    console.log(targetShape.getElementsByClassName('shape'));
+    // console.log(targetShape.getElementsByClassName('shape'));
 
     if (!targetShape) {
       alert(`Child with the name "${finishPoint}" not found!`);
@@ -368,10 +383,10 @@
     let roleIndex;
     if (targetShape.getElementsByClassName('shape')[0].type === "role") {
       //targetShape = document.querySelector(`.shape-role-${finishPoint}`);
-      console.log(targetShape.getElementsByClassName('shape')[0].name);
-      console.log(roleList);
+      // console.log(targetShape.getElementsByClassName('shape')[0].name);
+      // console.log(roleList);
       roleIndex = roleList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
-      console.log(roleIndex);
+      // console.log(roleIndex);
       roleList[roleIndex].mother = clickedShape.name;
     }
 
@@ -379,7 +394,7 @@
     if (targetShape.getElementsByClassName('shape')[0].type === "user") {
       //targetShape = document.querySelector(`.shape-user-${finishPoint}`);
       userIndex = userList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
-      console.log(userIndex);
+      // console.log(userIndex);
       userList[userIndex].mother = clickedShape.name;
     }
 
@@ -387,13 +402,13 @@
     if (targetShape.getElementsByClassName('shape')[0].type === "operation") {
       //targetShape = document.querySelector(`.shape-operation-${finishPoint}`);
       operationIndex = operationList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
-      console.log(operationIndex);
+      // console.log(operationIndex);
       operationList[operationIndex].mother = clickedShape.name;
     }
 
-    console.log(roleList);
-    console.log(userList);
-    console.log(operationList);
+    // console.log(roleList);
+    // console.log(userList);
+    // console.log(operationList);
 
     const clickedShapeRect = clickedShape.getBoundingClientRect();
     const targetShapeRect = targetShape.getBoundingClientRect();
@@ -485,10 +500,10 @@
     // console.log(connections);
     if (index !== -1) {
       const connection = connections[index];
-      console.log(connection);
+      // console.log(connection);
       connection.line.remove();
       // Assume a node can only have one mother
-      console.log(document.getElementsByClassName(connection.to.className)[0].getElementsByClassName('shape')[0].type);
+      // console.log(document.getElementsByClassName(connection.to.className)[0].getElementsByClassName('shape')[0].type);
       let toShape = document.getElementsByClassName(connection.to.className)[0].getElementsByClassName('shape')[0];
 
       let roleIndex;
@@ -524,6 +539,10 @@
   function updateConnections() {
     // console.log(connections);
     const arrowSize = 10;
+    console.log(operationList);
+    console.log(roleList);
+    console.log(userList);
+    console.log(connections);
 
     /*connections = connections.filter(connection => {
       const { from, to } = connection;
@@ -567,6 +586,58 @@
               }`
       );
     }
+  }
+
+  function generateXML() {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<data>\n';
+
+    xml += '<operationList>\n';
+    operationList.forEach(item => {
+      xml += `<operation name="${item.name}" type="${item.type}" mother="${item.mother}" />\n`;
+    });
+    xml += '</operationList>\n';
+
+    xml += '<userList>\n';
+    userList.forEach(item => {
+      xml += `<user name="${item.name}" type="${item.type}" attribute="${item.attribute}" mother="${item.mother}" />\n`;
+    });
+    xml += '</userList>\n';
+
+    xml += '<roleList>\n';
+    roleList.forEach(item => {
+      xml += `<role name="${item.name}" type="${item.type}" mother="${item.mother}" />\n`;
+    });
+    xml += '</roleList>\n';
+
+    xml += '<connections>\n';
+    connections.forEach(item => {
+      xml += `<connection from="${item.from.getElementsByClassName('shape')[0].name}" to="${item.to.getElementsByClassName('shape')[0].name}" />\n`;
+    });
+    xml += '</connections>\n';
+
+    xml += '</data>\n';
+    return xml;
+  }
+
+  function saveFile() {
+    function downloadXML(filename, xmlContent) {
+      const blob = new Blob([xmlContent], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    const xmlData = generateXML();
+    downloadXML('output.xml', xmlData);
   }
 
   // document.addEventListener("mousemove", updateConnections);
