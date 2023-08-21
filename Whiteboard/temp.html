@@ -35,6 +35,7 @@
     }
 
   </style>
+  <title>RBAC Whiteboard</title>
 </head>
 <body>
 <div id="toolkit">
@@ -115,13 +116,26 @@
 
   function addShape(tool) {
     let name = prompt(`Enter the name for the ${tool}:`);
-    if (tool === "role" && roleList.some(c => c.name.split('-')[1] === name)) {
-      alert(`The role ${name} already exists!`);
-      return;
+    let domainName;
+    if (tool === "role") {
+      if (roleList.some(c => c.name.split('-')[1] === name)) {
+        alert(`The role ${name} already exists!`);
+        return;
+      }
     }
-    if (tool === "operation" && operationList.some(o => o.name.split('-')[1] === name)) {
-      alert(`The operation ${name} already exists!`);
-      return;
+
+    if (tool === "operation") {
+      if (operationList.some(o => o.name.split('-')[1] === name)) {
+        alert(`The operation ${name} already exists!`);
+        return;
+      }
+      else {
+        domainName = prompt(`Enter the domain name for the ${tool}:`);
+        if (operationList.some(o => o.domainName === domainName)) {
+          alert(`The domain name for operation ${name} already exists!`);
+          return;
+        }
+      }
     }
     if (tool === "user" && userList.some(o => o.name.split('-')[1] === name)) {
       alert(`The user ${name} already exists!`);
@@ -148,29 +162,32 @@
       shape.name = "role-" + name;
 
       //shapeContainer.classList.add(`shape-role-${name}`);
-      roleList.push({name: "role-" + name, type: "role", mother: ""});
+      roleList.push({name: "role-" + name, type: "role", mother: []});
     }
     if (tool === "user") {
-      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="90" height="45">' +
-        '<text id="text-id" x="10" y="40">' + name + '</text>' +
-        '<rect class="user-shape" x="0" y="0" width="90" height="45" style="fill:none;stroke:black"/>' +
+      let attribute = ""
+      shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="45">' +
+        '<text id="text-id" x="10" y="10">' + name + '</text>' +
+              '<text id="attribute-id" x="10" y="40">' + attribute + '</text>' +
+        '<rect class="user-shape" x="0" y="0" width="200" height="45" style="fill:none;stroke:black"/>' +
         '</svg>';
       shape.type = "user";
-      shape.attribute = "";
+      shape.attribute = attribute;
       shape.name = "user-" + name;
 
       //shapeContainer.classList.add(`shape-user-${name}`);
-      userList.push({name: "user-" + name, type: "user", attribute: shape.attribute, mother: ""});
+      userList.push({name: "user-" + name, type: "user", attribute: shape.attribute, mother: []});
     }
     if (tool === "operation") {
       shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">' +
-        '<text id="text-id" x="10" y="50">' + name + '</text>' +
-        '<rect class="operation-shape" x="0" y="0" width="100" height="100" style="fill:none;stroke:black"/> </svg>';
+              '<text id="text-id" x="10" y="60">' + name + '</text>' +
+              '<text id="domain-id" x="10" y="10">' + domainName + '</text>' +
+              '<rect class="operation-shape" x="0" y="0" width="100" height="100" style="fill:none;stroke:black"/> </svg>';
       shape.type = "operation";
       shape.name = "operation-" + name;
-
+      shape.domainName = domainName
       //shapeContainer.classList.add(`shape-operation-${name}`);
-      operationList.push({name: "operation-" + name, type: "operation", mother: ""});
+      operationList.push({name: "operation-" + name, type: "operation", mother: [], domainName: domainName});
     }
 
 
@@ -244,9 +261,19 @@
   function showShapeContextMenu(e, clickedShape) {
     const contextMenu = document.createElement("div");
     contextMenu.className = "context-menu";
-    if (clickedShape.type === "role" || clickedShape.type === "operation") {
+    if (clickedShape.type === "role") {
       contextMenu.innerHTML = '<ul>' +
               '<li onclick="renameShape()">Rename</li>' +
+              '<li onclick="deleteShape()">Delete</li>' +
+              '<li onclick="hideContextMenu()">Hide Menu</li>' +
+              '<li onclick="addChildConnection()">Add Child Connection</li>' +
+              '</ul>';
+    }
+
+    if (clickedShape.type === "operation") {
+      contextMenu.innerHTML = '<ul>' +
+              '<li onclick="renameShape()">Rename</li>' +
+              '<li onclick="configureDomainName()">Configure Domain Name</li>' +
               '<li onclick="deleteShape()">Delete</li>' +
               '<li onclick="hideContextMenu()">Hide Menu</li>' +
               '<li onclick="addChildConnection()">Add Child Connection</li>' +
@@ -257,7 +284,6 @@
       contextMenu.innerHTML = '<ul>' +
               '<li onclick="renameShape()">Rename</li>' +
               '<li onclick="deleteShape()">Delete</li>' +
-              '<li onclick="showAttribute()">Show Attribute</li>' +
               '<li onclick="configureAttribute()">Configure Attribute</li>' +
               '<li onclick="hideContextMenu()">Hide Menu</li>' +
               '</ul>';
@@ -270,9 +296,22 @@
     document.body.appendChild(contextMenu);
   }
 
+  function configureDomainName() {
+    const newName = prompt("Enter the new domain name for the operation:");
+    if (newName !== null) {
+      const operationIndex = operationList.findIndex(o => o.name === clickedShape.name);
+      if (operationIndex !== -1) {
+        operationList[operationIndex].domainName = newName;
+        clickedShape.querySelector("#domain-id").textContent = newName;
+      }
+    }
+    cleanupContextMenu();
+  }
+
   function renameShape() {
     // console.log("rename");
-    const newName = prompt("Enter the new name for the shape:", clickedShape.textContent);
+    // const newName = prompt("Enter the new name for the shape:", clickedShape.textContent);
+    const newName = prompt("Enter the new name for the shape:", clickedShape.querySelector("#text-id").textContent);
     if (newName !== null) {
       // const oldName = clickedShape.textContent;
       const oldName = clickedShape.name;
@@ -317,16 +356,16 @@
       }
 
       let roleIndex;
-      roleIndex = roleList.findIndex((obj => obj.mother === clickedShape.name));
-      roleList[roleIndex].mother = "";
+      roleIndex = roleList.findIndex((obj => obj.mother.includes(clickedShape.name)));
+      roleList[roleIndex].mother.filter(item => item !== clickedShape.name);
 
       let operationIndex;
-      operationIndex = operationList.findIndex((obj => obj.mother === clickedShape.name));
-      operationList[operationIndex].mother = "";
+      operationIndex = operationList.findIndex((obj => obj.mother.includes(clickedShape.name)));
+      operationList[operationIndex].mother.filter(item => item !== clickedShape.name);
 
       let userIndex;
-      userIndex = userList.findIndex((obj => obj.mother === clickedShape.name));
-      userList[userIndex].mother = "";
+      userIndex = userList.findIndex((obj => obj.mother.includes(clickedShape.name)));
+      userList[userIndex].mother.filter(item => item !== clickedShape.name);
 
       connections = connections.filter(connection => {
         const {from, to} = connection;
@@ -358,13 +397,13 @@
     const newAttribute = prompt("Please insert the new attribute of the user:", clickedShape.attribute);
     if (newAttribute !== null) {
       if (confirm(`Are you sure to configure the new attribute as ${newAttribute} from ${clickedShape.attribute} on ${clickedShape.name}`)) {
-        const oldAttribute = clickedShape.attribute;
+        // const oldAttribute = clickedShape.attribute;
         clickedShape.attribute = newAttribute;
-        // TODO: CHECK HERE
-        // POTENTIAL PROBLEM HERE!
-        const userIndex = userList.findIndex(user => user.attribute === oldAttribute);
+
+        const userIndex = userList.findIndex(user => user.name === clickedShape.name);
         if (userIndex !== -1) {
           userList[userIndex].attribute = newAttribute;
+          clickedShape.querySelector("#attribute-id").textContent = newAttribute;
         }
       }
     }
@@ -410,7 +449,7 @@
       roleIndex = roleList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
       console.log(targetShape.getElementsByClassName('shape')[0].name);
       console.log(roleIndex);
-      roleList[roleIndex].mother = clickedShape.name;
+      roleList[roleIndex].mother.push(clickedShape.name);
     }
 
     let userIndex;
@@ -418,7 +457,7 @@
       //targetShape = document.querySelector(`.shape-user-${finishPoint}`);
       userIndex = userList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
       // console.log(userIndex);
-      userList[userIndex].mother = clickedShape.name;
+      userList[userIndex].mother.push(clickedShape.name);
     }
 
     let operationIndex;
@@ -426,7 +465,7 @@
       //targetShape = document.querySelector(`.shape-operation-${finishPoint}`);
       operationIndex = operationList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
       // console.log(operationIndex);
-      operationList[operationIndex].mother = clickedShape.name;
+      operationList[operationIndex].mother.push(clickedShape.name);
     }
 
     // console.log(roleList);
@@ -532,19 +571,19 @@
       let roleIndex;
       if (toShape.type === "role") {
         roleIndex = roleList.findIndex((obj => obj.name === toShape.name));
-        roleList[roleIndex].mother = "";
+        roleList[roleIndex].mother.filter(item => item !== toShape.name);
       }
 
       let operationIndex;
       if (toShape.type === "operation") {
         operationIndex = operationList.findIndex((obj => obj.name === toShape.name));
-        operationList[operationIndex].mother = "";
+        operationList[operationIndex].mother.filter(item => item !== toShape.name);
       }
 
       let userIndex;
       if (toShape.type === "user") {
         userIndex = userList.findIndex((obj => obj.name === toShape.name));
-        userList[userIndex].mother = "";
+        userList[userIndex].mother.filter(item => item !== toShape.name);
       }
 
       connections.splice(index, 1);
@@ -617,25 +656,71 @@
 
     xml += '<operationList>\n';
     operationList.forEach(item => {
-      xml += `<operation name="${item.name}" type="${item.type}" mother="${item.mother}" />\n`;
+      xml += '<operation>\n';
+      xml += `<name>${item.name}</name>\n`;
+      xml += `<type>${item.type}</type>\n`;
+      if (item.mother.length === 0) {
+        xml += '<mother>\n';
+        xml += '</mother>\n';
+      }
+      if (item.mother.length > 0) {
+        xml += '<mother>\n';
+        item.mother.forEach(motherName => {
+          xml += `<item>${motherName}</item>\n`;
+        });
+        xml += '</mother>\n';
+      }
+      xml += '</operation>\n';
     });
     xml += '</operationList>\n';
 
     xml += '<userList>\n';
     userList.forEach(item => {
-      xml += `<user name="${item.name}" type="${item.type}" attribute="${item.attribute}" mother="${item.mother}" />\n`;
+      xml += '<user>\n';
+      xml += `<name>${item.name}</name>\n`;
+      xml += `<type>${item.type}</type>\n`;
+      xml += `<attribute>${item.attribute}</attribute>\n`;
+      if (item.mother.length === 0) {
+        xml += '<mother>\n';
+        xml += '</mother>\n';
+      }
+      if (item.mother.length > 0) {
+        xml += '<mother>\n';
+        item.mother.forEach(motherName => {
+          xml += `<item>${motherName}</item>\n`;
+        });
+        xml += '</mother>\n';
+      }
+      xml += '</user>\n';
     });
     xml += '</userList>\n';
 
     xml += '<roleList>\n';
     roleList.forEach(item => {
-      xml += `<role name="${item.name}" type="${item.type}" mother="${item.mother}" />\n`;
+      xml += '<role>\n';
+      xml += `<name>${item.name}</name>\n`;
+      xml += `<type>${item.type}</type>\n`;
+      if (item.mother.length === 0) {
+        xml += '<mother>\n';
+        xml += '</mother>\n';
+      }
+      if (item.mother.length > 0) {
+        xml += '<mother>\n';
+        item.mother.forEach(motherName => {
+          xml += `<item>${motherName}</item>\n`;
+        });
+        xml += '</mother>\n';
+      }
+      xml += '</role>\n';
     });
     xml += '</roleList>\n';
 
     xml += '<connections>\n';
     connections.forEach(item => {
-      xml += `<connection from="${item.from.getElementsByClassName('shape')[0].name}" to="${item.to.getElementsByClassName('shape')[0].name}" />\n`;
+      xml += '<connection>\n';
+      xml += `<from>${item.from.querySelector('.shape').name}</from>\n`;
+      xml += `<to>${item.to.querySelector('.shape').name}</to>\n`;
+      xml += '</connection>\n';
     });
     xml += '</connections>\n';
 
