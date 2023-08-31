@@ -34,6 +34,19 @@
       z-index: 10001;
     }
 
+    .user-shape {
+    fill: none;
+    stroke: black;
+    }
+
+    .user-shape.occupied {
+      fill: red;
+    }
+
+    .user-shape:not(.occupied) {
+      fill: green;
+    }
+
   </style>
   <title>RBAC Whiteboard</title>
 </head>
@@ -461,6 +474,11 @@
       userIndex = userList.findIndex((obj => obj.name === targetShape.getElementsByClassName('shape')[0].name));
       // console.log(userIndex);
       userList[userIndex].mother.push(clickedShape.name);
+
+      if (!targetShape.getElementsByClassName('shape')[0].occupied) {
+        targetShape.getElementsByClassName('shape')[0].occupied = true;
+        targetShape.querySelector('.user-shape').classList.add('occupied');
+      }
     }
 
     let operationIndex;
@@ -651,6 +669,20 @@
               }`
       );
     }
+
+    for (const connection of connections) {
+    const { from, to } = connection;
+
+    if (to.getElementsByClassName('shape')[0].type === "user") {
+      const userShape = to.querySelector('.user-shape');
+
+      if (to.getElementsByClassName('shape')[0].occupied) {
+        userShape.classList.add('occupied');
+      } else {
+        userShape.classList.remove('occupied');
+      }
+    }}
+
   }
 
   function generateXML() {
