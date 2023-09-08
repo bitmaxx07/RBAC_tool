@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test XML Data Submission</title>
+</head>
+<body>
+    <button onclick="sendXMLData()">Send XML Data</button>
+    <div id="response"></div>
+
+    <script>
+        function sendXMLData() {
+            const xmlData = '<data value="test"><item>Test Item</item></data>';
+            const url = 'http://127.0.0.1:5000/get-xml';
+          
+            fetch(url, {
+                method: 'POST',
+                body: xmlData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Error occurred while sending XML data.');
+            });
+        }
+    </script>
+</body>
+</html>

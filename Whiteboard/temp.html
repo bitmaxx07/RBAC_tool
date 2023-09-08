@@ -64,6 +64,13 @@
   <button class="tool" onclick="saveFile()">
     Save File
   </button>
+  <button class="tool" onclick="updateUser()">
+    Update User Status
+  </button>
+  <button class="tool" onclick="sendXMLToServer()">
+    Send XML to Server
+  </button>
+
 </div>
 
 <script>
@@ -182,10 +189,11 @@
       let occupied = false;
 
       shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="45">' +
-        '<text id="text-id" x="10" y="10">' + name + '</text>' +
-              '<text id="attribute-id" x="10" y="40">' + attribute + '</text>' +
-        '<rect class="user-shape" x="0" y="0" width="200" height="45" style="fill:none;stroke:black"/>' +
+        '<text id="text-id" x="10" y="10" fill="black">' + name + '</text>' +
+              '<text id="attribute-id" x="10" y="40" fill="black">' + attribute + '</text>' +
+        '<rect class="user-shape" x="0" y="0" width="200" height="45" style="fill:none;stroke:yellowgreen"/>' +
         '</svg>';
+
       shape.type = "user";
       shape.attribute = attribute;
       shape.name = "user-" + name;
@@ -612,6 +620,20 @@
     cleanupConnectionContextMenu();
   }
 
+  // CHECK THIS METHOD!
+  function updateUser() {
+    userList.forEach(user => {
+    const userShape = document.querySelector(`.shape-${user.name}`);
+    if (userShape) {
+      if (user.occupied) {
+        userShape.querySelector('.user-shape').style.stroke = 'red';
+      } else {
+        userShape.querySelector('.user-shape').style.stroke = 'greenyellow';
+      }
+    }
+  });
+  }
+
   function cleanupConnectionContextMenu() {
     const contextMenu = document.querySelector("#connectContextMenu");
     if (contextMenu) {
@@ -694,6 +716,7 @@
       xml += '<operation>\n';
       xml += `<name>${item.name}</name>\n`;
       xml += `<type>${item.type}</type>\n`;
+      xml += `<domainName>${item.domainName}</domainName>\n`;
       if (item.mother.length === 0) {
         xml += '<mother>\n';
         xml += '</mother>\n';
@@ -782,6 +805,33 @@
 
     const xmlData = generateXML();
     downloadXML('output.xml', xmlData);
+  }
+
+  function sendXMLToServer() {
+    const xmlData = generateXML();
+    const url = 'http://127.0.0.1:5000/upload-xml';
+
+    const blob = new Blob([xmlData], { type: 'text/xml' });
+
+    const formData = new FormData();
+    formData.append('xmlData', blob, 'xmlData.xml');
+    console.log(xmlData);
+    console.log(formData);
+
+    fetch(url, {
+      method: 'POST',
+      body: formData,
+    })
+      .then(response => {
+        if (response.ok) {
+          alert('XML file sent successfully!');
+        } else {
+          alert('Failed to send XML file to the server.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+    });
   }
 
   // document.addEventListener("mousemove", updateConnections);
