@@ -28,7 +28,7 @@ def upload_xml():
 def get_xml_data():
     xml_data = request.data
     app.logger.info("Received XML data: %s", xml_data)
-    # Your XML processing logic here
+    
     return jsonify({"message": "XML data received successfully"})
 
 
