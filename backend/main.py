@@ -14,8 +14,8 @@ async def root():
 with open('output (1).xml', 'r', encoding='utf-8') as file:
     xml_file = file.read()
 
-xml_dict = xmltodict.parse(xml_file)
-pprint.pprint(xml_dict, indent=2)
+# xml_dict = xmltodict.parse(xml_file)
+# pprint.pprint(xml_dict, indent=2)
 
 node_list = []
 
@@ -67,8 +67,8 @@ def extract_node(xml_f):
 
 
 extract_node(xml_file)
-for node in node_list:
-    Node.print_node(node)
+'''for node in node_list:
+    Node.print_node(node)'''
 
 
 def find_user_by_operation(li, operation, temp_res):
@@ -100,13 +100,13 @@ def get_user_info(xml_dic, user):
             return temp
 
 
-print(find_user_by_operation(node_list, "operation-operation1", set()))
+# print(find_user_by_operation(node_list, "operation-operation1", set()))
 
-user_list = find_user_by_operation(node_list, "operation-operation1", set())
+# user_list = find_user_by_operation(node_list, "operation-operation1", set())
 
-for u in user_list:
+'''for u in user_list:
     info = get_user_info(xml_dict, u)
     if info["occupied"] == "false":
-        print(u)
+        print(u)'''
 
 # print(get_user_info(xml_dict, "user-user2"))
