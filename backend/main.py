@@ -11,8 +11,8 @@ app = FastAPI()
 async def root():
     return {"message": "Hello"}
 
-with open('output (1).xml', 'r', encoding='utf-8') as file:
-    xml_file = file.read()
+# with open('output (1).xml', 'r', encoding='utf-8') as file:
+#     xml_file = file.read()
 
 # xml_dict = xmltodict.parse(xml_file)
 # pprint.pprint(xml_dict, indent=2)
@@ -66,7 +66,7 @@ def extract_node(xml_f):
         node_list.append(Node(temp_list["name"], temp_list["mother"]["item"], temp_list["type"]))
 
 
-extract_node(xml_file)
+# extract_node(xml_file)
 '''for node in node_list:
     Node.print_node(node)'''
 
@@ -87,6 +87,20 @@ def find_user_by_operation(li, operation, temp_res):
                 find_user_by_operation(li, item.name, res)
 
     return res
+
+
+def get_domain_by_operation(xml_f, operation):
+    xml_dic = xmltodict.parse(xml_f)
+    temp_list = xml_dic["data"]["operationList"]["operation"]
+    if isinstance(temp_list, list):
+        for item in xml_dic["data"]["operationList"]["operation"]:
+            if item["name"] == operation:
+                return item["domainName"]
+    else:
+        if xml_dic["data"]["operationList"]["operation"]["name"] == operation:
+            return xml_dic["data"]["operationList"]["operation"]["domainName"]
+
+    return "Operation", operation, "not found! Please check"
 
 
 def get_user_info(xml_dic, user):

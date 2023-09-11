@@ -12,6 +12,9 @@ def index():
     return "Hello, World!"
 
 
+operation_name = "operation-operation1"
+
+
 @app.route('/upload-xml', methods=['POST'])
 def upload_xml():
     try:
@@ -26,28 +29,27 @@ def upload_xml():
         print("XML Data Received:")
         print(xml_data.decode())
 
-        # Configure operation name here
-        operation_name = "operation-operation1"
-
         extract_node(xml_data)
         user_list = find_user_by_operation(node_list, operation_name, set())
 
         res_list = []
         for u in user_list:
-            info = get_user_info(xmltodict.parse(xml_file), u)
+            info = get_user_info(xmltodict.parse(xml_data), u)
             if info["occupied"] == "false":
                 res_list.append(u)
 
         response = "Available Users: \n"
 
         for u in res_list:
-            info = get_user_info(xmltodict.parse(xml_file), u)
+            info = get_user_info(xmltodict.parse(xml_data), u)
             # print(info)
-            res_endpoint = info["attribute"] + "/" + operation_name
+            res_endpoint = info["attribute"] + "/" + get_domain_by_operation(xml_data, operation_name)
             response += u
             response += ", Endpoint of the user: "
             response += res_endpoint
             response += "\n"
+
+        print(response)
 
         # return jsonify({"message": "XML data received successfully"})
         return response
