@@ -13,10 +13,12 @@ def index():
 
 
 operation_name = "operation-operation1"
+response = ""
 
 
 @app.route('/upload-xml', methods=['POST'])
 def upload_xml():
+    global response
     try:
         # print(request)
         print("Reading xml data...")
@@ -71,6 +73,14 @@ def get_xml_data():
     app.logger.info("Received XML data: %s", xml_data)
 
     return jsonify({"message": "XML data received successfully"})
+
+
+@app.route('/response/<string:op_name>', methods=['GET'])
+def get_response(op_name):
+    if op_name == operation_name:
+        return response
+    else:
+        return "Operation not found!"
 
 
 if __name__ == '__main__':
