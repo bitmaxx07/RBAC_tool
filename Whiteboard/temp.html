@@ -634,6 +634,18 @@
   });
   }
 
+  function changeUserStatus(userName) {
+    const userIndex = userList.findIndex(obj => obj.name === userName)
+    if (userIndex !== -1) {
+      userList[userIndex].occupied = userList[userIndex].occupied === "true" ? "false" : "true";
+      console.log(userList[userIndex]);
+    }
+    else {
+      console.log("User not found!");
+    }
+  }
+
+
   function cleanupConnectionContextMenu() {
     const contextMenu = document.querySelector("#connectContextMenu");
     if (contextMenu) {
