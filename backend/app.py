@@ -1,7 +1,9 @@
 import os.path
+import re
+import time
 
 import xmltodict
-from flask import Flask, request, jsonify, make_response, render_template
+from flask import Flask, request, jsonify, make_response, render_template, redirect
 from flask_cors import CORS
 from main import *
 from selenium import webdriver
@@ -18,10 +20,13 @@ def index():
     return "Hello, World!"
 
 
-# Always configure here!
+# Always configure here! The operation name is formed as this: operation-[operation_name]
 operation_name = "operation-op1"
 response = ""
 first_user_endpoint = ""
+connections_list = []
+connections_mapping = {}
+fastest_endpoint = ""
 
 
 @app.route('/upload-xml', methods=['POST'])
@@ -63,6 +68,17 @@ def upload_xml():
         global first_user_endpoint
         first_user_endpoint = info["attribute"] + "/" + get_domain_by_operation(xml_data, operation_name)
 
+        for item in res_list:
+            endpoint_info = get_user_info(xmltodict.parse(xml_data), item)
+            # print(endpoint_info)
+            global connections_list
+            url = endpoint_info["attribute"] + "/" + get_domain_by_operation(xml_data, operation_name)
+            # print(url)
+            connections_list.append(url)
+            # print(connections_list)
+            connections_mapping.update({url: item})
+
+        response += "Fastest connection is " + test_connections() + " from " + connections_mapping[test_connections()]
         print(response)
 
         # return jsonify({"message": "XML data received successfully"})
@@ -85,6 +101,69 @@ def get_xml_data():
     app.logger.info("Received XML data: %s", xml_data)
 
     return jsonify({"message": "XML data received successfully"})
+
+
+def test_connections():
+    fastest_connection = None
+    fastest_response = float('inf')
+
+    # print(connections_list)
+    for item in connections_list:
+        # print(item)
+        url, response_time = check_response_time(item)
+        # print(url, response_time)
+        if response_time < fastest_response:
+            fastest_connection = url
+            fastest_response = response_time
+
+    global fastest_endpoint
+    fastest_endpoint = fastest_connection
+
+    return fastest_connection
+
+
+@app.route('/fastest', methods=['GET'])
+def get_fastest():
+    if fastest_endpoint == "":
+        return "Fastest connection not found!"
+    else:
+        external_url = complete_url(fastest_endpoint)
+        print(external_url)
+        return redirect(external_url)
+
+
+def complete_url(url):
+    if is_valid_ip_address(url) or url.startswith("http://") or url.startswith("https://"):
+        return url
+
+    else:
+        completed_url = "https://" + url
+        return completed_url
+
+
+def is_valid_ip_address(url):
+    ip_pattern = r"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][" \
+                 r"0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+    return re.match(ip_pattern, url)
+
+
+def check_response_time(url):
+    try:
+        # print(url)
+        start_time = time.time()
+        res = requests.get(complete_url(url))
+        # print(complete_url(url))
+        end_time = time.time()
+        res_ms = (end_time - start_time) * 1000
+        if res.status_code == 200:
+            print(url, "connection time: ", str(res_ms) + "ms")
+            return url, end_time - start_time
+        else:
+            # print(res.status_code)
+            return url, float('inf')
+    except Exception as e:
+        print(f"Error checking {url}: {e}")
+        return url, float('inf')
 
 
 @app.route('/response/<string:op_name>', methods=['GET'])
@@ -123,6 +202,11 @@ def get_resource(op_name):
 
 @app.route('/take-user/<string:username>', methods=['POST'])
 def take_user(username):
+    """
+    This method sets user from unoccupied to occupied by sending a post request
+    :param username: user to take
+    :return: server feedback
+    """
     '''try:
         # Trigger changeUserStatus(userName) in temp.html
         # changeUserStatus(username)
@@ -132,7 +216,7 @@ def take_user(username):
         return render_template(javascript_path, javascript_call=javascript_call)
     except Exception as e:
         return jsonify({"error": str(e)}), 500'''
-    try:
+    '''try:
         print("starting chrome driver...")
         driver = webdriver.Chrome(executable_path="/Users/maqiaoming/Downloads/chromedriver-mac-x64/chromedriver")
         print("ok for chrome driver")
@@ -159,7 +243,20 @@ def take_user(username):
     except Exception as e:
         error_message = "An error occurred: " + str(e)
         print(error_message)
-        return error_message
+        return error_message'''
+    res = username, "occupied"
+    return res, 200
+
+
+@app.route('/set-unoccupied/<string:username>', methods=['POST'])
+def set_unoccupied(username):
+    """
+    This method sets user from occupied to unoccupied by sending a post request
+    :param username:
+    :return:
+    """
+    res = username, "unoccupied"
+    return res, 200
 
 
 if __name__ == '__main__':

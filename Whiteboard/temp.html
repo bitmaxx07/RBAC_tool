@@ -821,6 +821,7 @@
 
   function sendXMLToServer() {
     const xmlData = generateXML();
+    // Here to configure the URL address to transmit the data
     const url = 'http://127.0.0.1:5000/upload-xml';
 
     const blob = new Blob([xmlData], { type: 'text/xml' });
@@ -844,6 +845,17 @@
       .catch(error => {
         console.error('Error:', error);
     });
+  }
+
+  function readOccupiedStatus() {
+
+    const occupiedBaseUrl = 'http://127.0.0.1:5000/take-user';
+    const occupiedUserUrl = userList.map(user => `${occupiedBaseUrl}/${user.name}`);
+
+    occupiedUserUrl.forEach(url => {
+
+    });
+
   }
 
   // document.addEventListener("mousemove", updateConnections);
