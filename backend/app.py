@@ -77,6 +77,7 @@ def upload_xml():
             connections_list.append(url)
             # print(connections_list)
             connections_mapping.update({url: item})
+            # print(connections_mapping)
 
         response += "Fastest connection is " + test_connections() + " from " + connections_mapping[test_connections()]
         print(response)
@@ -128,7 +129,7 @@ def get_fastest():
         return "Fastest connection not found!"
     else:
         external_url = complete_url(fastest_endpoint)
-        print(external_url)
+        # print(external_url)
         return redirect(external_url)
 
 
@@ -199,6 +200,19 @@ def get_resource(op_name):
     else:
         return "Operation not found!"
 
+
+@app.route('/fastest/html', methods=['GET'])
+def get_fastest_html():
+    r = requests.get(complete_url(fastest_endpoint))
+    if r.status_code == 200:
+        soup = BeautifulSoup(r.text, 'html.parser')
+        elements = soup.find_all(True)
+        res = ""
+        for e in elements:
+            res += str(e)
+        return res
+    else:
+        return "Failed to retrieve webpage, status code: " + str(r.status_code)
 
 @app.route('/take-user/<string:username>', methods=['POST'])
 def take_user(username):
