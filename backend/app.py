@@ -6,13 +6,21 @@ import xmltodict
 from flask import Flask, request, jsonify, make_response, render_template, redirect
 from flask_cors import CORS
 from main import *
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+# from selenium import webdriver
+# from selenium.common.exceptions import TimeoutException
 import requests
 from bs4 import BeautifulSoup
+import random
+import threading
 
 app = Flask(__name__)
 CORS(app)
+
+
+class Endpoint:
+    def __init__(self, name):
+        self.name = name
+        self.occupied = False
 
 
 @app.route('/')
@@ -24,7 +32,10 @@ def index():
 operation_name = "operation-op1"
 response = ""
 first_user_endpoint = ""
+
 connections_list = []
+endpoints = []
+
 connections_mapping = {}
 fastest_endpoint = ""
 
@@ -79,8 +90,11 @@ def upload_xml():
             connections_mapping.update({url: item})
             # print(connections_mapping)
 
+        # print(connections_list)
+        '''connections_list = [Endpoint(name) for name in connections_list]
+        print(connections_list)
         response += "Fastest connection is " + test_connections() + " from " + connections_mapping[test_connections()]
-        print(response)
+        print(response)'''
 
         # return jsonify({"message": "XML data received successfully"})
         return response
@@ -105,17 +119,21 @@ def get_xml_data():
 
 
 def test_connections():
+    global connections_list, endpoints
+
+    if not endpoints:
+        endpoints = [Endpoint(name) for name in connections_list]
+
     fastest_connection = None
     fastest_response = float('inf')
 
-    # print(connections_list)
-    for item in connections_list:
-        # print(item)
-        url, response_time = check_response_time(item)
-        # print(url, response_time)
-        if response_time < fastest_response:
-            fastest_connection = url
-            fastest_response = response_time
+    for item in endpoints:
+        print(item.name, item.occupied)
+        if not item.occupied:
+            url, response_time = check_response_time(item.name)
+            if response_time < fastest_response:
+                fastest_connection = url
+                fastest_response = response_time
 
     global fastest_endpoint
     fastest_endpoint = fastest_connection
@@ -125,12 +143,43 @@ def test_connections():
 
 @app.route('/fastest', methods=['GET'])
 def get_fastest():
+    test_connections()
+    for item in endpoints:
+        print(item.name, item.occupied)
+    print(fastest_endpoint)
     if fastest_endpoint == "":
-        return "Fastest connection not found!"
+        return "Fastest connection not found or all endpoints are unavailable!"
     else:
-        external_url = complete_url(fastest_endpoint)
+        '''external_url = complete_url(fastest_endpoint)
+        url_index = None
+        for i, item in enumerate(connections_list):
+            if complete_url(item.name) == external_url:
+                url_index = i
+                break
+        if url_index is not None:
+            # Print something here
+            connections_list[url_index].occupied = True
+            time.sleep(10)'''
         # print(external_url)
-        return redirect(external_url)
+        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 120))
+        thread.start()
+        return redirect(complete_url(fastest_endpoint))
+
+
+def set_occupied(endpoint, delay):
+    # print(endpoint)
+    external_url = complete_url(endpoint)
+    url_index = None
+    for i, item in enumerate(endpoints):
+        if complete_url(item.name) == external_url:
+            url_index = i
+            break
+    if url_index is not None:
+        endpoints[url_index].occupied = True
+        time.sleep(delay)
+        endpoints[url_index].occupied = False
+    else:
+        print(f"{endpoint} not found in connection list!")
 
 
 def complete_url(url):
@@ -138,7 +187,7 @@ def complete_url(url):
         return url
 
     else:
-        completed_url = "https://" + url
+        completed_url = "http://" + url
         return completed_url
 
 
@@ -210,9 +259,36 @@ def get_fastest_html():
         res = ""
         for e in elements:
             res += str(e)
-        return res
+        # Set the fastest endpoint as occupied
+        # set_occupied(fastest_endpoint)
+        result_message = res
+        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 120))
+        thread.start()
+        return result_message
+        # return res
     else:
-        return "Failed to retrieve webpage, status code: " + str(r.status_code)
+        result_message = "Failed to retrieve webpage, status code: " + str(r.status_code)
+        return result_message
+
+
+@app.route('/epsilon', methods=['GET'])
+def epsilon_greedy():
+    test_connections()
+
+    p = random.random()
+    # configure p as 0.7
+    if p < 0.7:
+        print("The fastest connection selected")
+        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 120))
+        thread.start()
+        return fastest_endpoint
+    else:
+        print("Randomly selected")
+        selected_endpoint = random.choice(endpoints).name
+        thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 120))
+        thread.start()
+        return selected_endpoint
+
 
 @app.route('/take-user/<string:username>', methods=['POST'])
 def take_user(username):
