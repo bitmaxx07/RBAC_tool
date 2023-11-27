@@ -166,6 +166,20 @@ def get_fastest():
         return redirect(complete_url(fastest_endpoint))
 
 
+@app.route('/fastest-element', methods=['GET'])
+def get_fastest_element():
+    test_connections()
+    '''for item in endpoints:
+        print(item.name, item.occupied)
+    print(fastest_endpoint)'''
+    if fastest_endpoint == "":
+        return "Fastest connection not found or all endpoints are unavailable!"
+    else:
+        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 120))
+        thread.start()
+        return get_html_element(fastest_endpoint)
+
+
 def set_occupied(endpoint, delay):
     # print(endpoint)
     external_url = complete_url(endpoint)
@@ -250,6 +264,19 @@ def get_resource(op_name):
         return "Operation not found!"
 
 
+def get_html_element(address):
+    r = requests.get(complete_url(address))
+    if r.status_code == 200:
+        soup = BeautifulSoup(r.content, 'html.parser')
+        elements = soup.find_all(True)
+        res = ""
+        for e in elements:
+            res += str(e)
+        return res
+    else:
+        return "Failed to retrieve webpage, status code: " + str(r.status_code)
+
+
 @app.route('/fastest/html', methods=['GET'])
 def get_fastest_html():
     r = requests.get(complete_url(fastest_endpoint))
@@ -288,6 +315,23 @@ def epsilon_greedy():
         thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 120))
         thread.start()
         return selected_endpoint
+
+
+@app.route('/epsilon-element', methods=['GET'])
+def epsilon_greedy_element():
+    test_connections()
+    p = random.random()
+    if p < 0.7:
+        print("The fastest connection selected")
+        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 120))
+        thread.start()
+        return get_html_element(fastest_endpoint)
+    else:
+        print("Randomly selected")
+        selected_endpoint = random.choice(endpoints).name
+        thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 120))
+        thread.start()
+        return get_html_element(selected_endpoint)
 
 
 @app.route('/take-user/<string:username>', methods=['POST'])
