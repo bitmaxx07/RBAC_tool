@@ -1,6 +1,7 @@
 import os.path
 import re
 import time
+import urllib.request
 
 import xmltodict
 from flask import Flask, request, jsonify, make_response, render_template, redirect
@@ -12,6 +13,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import threading
+# from printers import test_printers
 
 app = Flask(__name__)
 CORS(app)
@@ -39,6 +41,8 @@ endpoints = []
 connections_mapping = {}
 fastest_endpoint = ""
 
+start_time = None
+
 
 @app.route('/upload-xml', methods=['POST'])
 def upload_xml():
@@ -56,13 +60,19 @@ def upload_xml():
         print(xml_data.decode())
 
         extract_node(xml_data)
+        pprint.pprint(xmltodict.parse(xml_data))
+        # print(operation_name)
         user_list = find_user_by_operation(node_list, operation_name, set())
+
+        # print(user_list)
 
         res_list = []
         for u in user_list:
             info = get_user_info(xmltodict.parse(xml_data), u)
             if info["occupied"] == "false":
                 res_list.append(u)
+
+        # print(res_list)
 
         response = "Available Users: "
 
@@ -121,6 +131,9 @@ def get_xml_data():
 def test_connections():
     global connections_list, endpoints
 
+    global start_time
+    local_start_time = time.time()
+
     if not endpoints:
         endpoints = [Endpoint(name) for name in connections_list]
 
@@ -137,6 +150,9 @@ def test_connections():
 
     global fastest_endpoint
     fastest_endpoint = fastest_connection
+
+    # Avoid testing connection time being calculated in the whole process
+    start_time += time.time() - local_start_time
 
     return fastest_connection
 
@@ -306,13 +322,13 @@ def epsilon_greedy():
     # configure p as 0.7
     if p < 0.7:
         print("The fastest connection selected")
-        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 120))
+        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 0))
         thread.start()
         return fastest_endpoint
     else:
         print("Randomly selected")
         selected_endpoint = random.choice(endpoints).name
-        thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 120))
+        thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 0))
         thread.start()
         return selected_endpoint
 
@@ -323,15 +339,55 @@ def epsilon_greedy_element():
     p = random.random()
     if p < 0.7:
         print("The fastest connection selected")
-        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 120))
+        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 0))
         thread.start()
-        return get_html_element(fastest_endpoint)
+        res = urllib.request.urlopen(fastest_endpoint)
+        return res.read()
+        # return get_html_element(fastest_endpoint)
     else:
         print("Randomly selected")
         selected_endpoint = random.choice(endpoints).name
-        thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 120))
+        thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 0))
         thread.start()
-        return get_html_element(selected_endpoint)
+        # return get_html_element(selected_endpoint)
+        res = urllib.request.urlopen(selected_endpoint)
+        return res.read()
+
+
+@app.route('/printer1', methods=['GET'])
+def printer1():
+    # return redirect("https://lehre.bpm.in.tum.de/ports/5256/print-model")
+    res = urllib.request.urlopen("http://3d-printer-1:4242/print-model")
+    return res.read()
+
+
+@app.route('/printer2', methods=['GET'])
+def printer2():
+    res = urllib.request.urlopen("http://3d-printer-2:4242/print-model")
+    return res.read()
+
+
+@app.route('/printer3', methods=['GET'])
+def printer3():
+    res = urllib.request.urlopen("http://3d-printer-3:4242/print-model")
+    return res.read()
+
+
+@app.route('/start', methods=['GET'])
+def set_start():
+    global start_time
+    start_time = time.time()
+    return str(start_time)
+
+
+@app.route('/end', methods=['GET'])
+def set_end():
+    if start_time is None:
+        return 'Process not started yet!'
+    end_time = time.time()
+    duration = end_time - start_time
+    print(str(duration) + "s")
+    return str(duration) + "s"
 
 
 @app.route('/take-user/<string:username>', methods=['POST'])
