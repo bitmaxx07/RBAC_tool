@@ -46,6 +46,10 @@ start_time = None
 
 @app.route('/upload-xml', methods=['POST'])
 def upload_xml():
+    """
+    users can upload xml directly to the server for debugging
+    :return:
+    """
     global response
     try:
         # print(request)
@@ -122,6 +126,10 @@ def upload_xml():
 
 @app.route('/get-xml', methods=['POST'])
 def get_xml_data():
+    """
+    get request data
+    :return: JSON style message
+    """
     xml_data = request.data
     app.logger.info("Received XML data: %s", xml_data)
 
@@ -129,6 +137,10 @@ def get_xml_data():
 
 
 def test_connections():
+    """
+    test endpoints' connections
+    :return: endpoint with the fastest connection
+    """
     global connections_list, endpoints
 
     global start_time
@@ -159,6 +171,10 @@ def test_connections():
 
 @app.route('/fastest', methods=['GET'])
 def get_fastest():
+    """
+    GET request for the fastest endpoint
+    :return: redirection to the fastest endpoint
+    """
     test_connections()
     for item in endpoints:
         print(item.name, item.occupied)
@@ -184,6 +200,10 @@ def get_fastest():
 
 @app.route('/fastest-element', methods=['GET'])
 def get_fastest_element():
+    """
+    Same as get_fastest(), but returns HTML elements of the endpoint
+    :return:
+    """
     test_connections()
     '''for item in endpoints:
         print(item.name, item.occupied)
@@ -197,6 +217,12 @@ def get_fastest_element():
 
 
 def set_occupied(endpoint, delay):
+    """
+    Set endpoint to "occupied" status
+    :param endpoint: endpoint to set
+    :param delay: secs for occupation
+    :return:
+    """
     # print(endpoint)
     external_url = complete_url(endpoint)
     url_index = None
@@ -213,6 +239,11 @@ def set_occupied(endpoint, delay):
 
 
 def complete_url(url):
+    """
+    complete URL if the string is not a valid URL address
+    :param url:
+    :return:
+    """
     if is_valid_ip_address(url) or url.startswith("http://") or url.startswith("https://"):
         return url
 
@@ -228,6 +259,11 @@ def is_valid_ip_address(url):
 
 
 def check_response_time(url):
+    """
+    Test response time of a URl request
+    :param url: desired URL to test
+    :return: response time in ms
+    """
     try:
         # print(url)
         start_time = time.time()
@@ -316,25 +352,38 @@ def get_fastest_html():
 
 @app.route('/epsilon', methods=['GET'])
 def epsilon_greedy():
+    """
+    This function allocates endpoints with Epsilon-Greedy algorithm
+    :return: selected endpoint from the algorithm
+    """
     test_connections()
 
     p = random.random()
     # configure p as 0.7
     if p < 0.7:
         print("The fastest connection selected")
-        thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 0))
-        thread.start()
-        return fastest_endpoint
+        # thread = threading.Thread(target=set_occupied, args=(fastest_endpoint, 0))
+        # thread.start()
+        res = urllib.request.urlopen(fastest_endpoint)
+        return res.read()
+        # return fastest_endpoint
     else:
         print("Randomly selected")
         selected_endpoint = random.choice(endpoints).name
-        thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 0))
-        thread.start()
-        return selected_endpoint
+        # print(selected_endpoint, "selected")
+        # thread = threading.Thread(target=set_occupied, args=(selected_endpoint, 0))
+        # thread.start()
+        res = urllib.request.urlopen(selected_endpoint)
+        return res.read()
+        # return selected_endpoint
 
 
 @app.route('/epsilon-element', methods=['GET'])
 def epsilon_greedy_element():
+    """
+    This function allocates endpoints with Epsilon-Greedy algorithm
+    :return: html element of selected endpoint from the algorithm
+    """
     test_connections()
     p = random.random()
     if p < 0.7:
@@ -356,6 +405,10 @@ def epsilon_greedy_element():
 
 @app.route('/printer1', methods=['GET'])
 def printer1():
+    """
+        This function calls printer 1
+        :return: message "success: printer1"
+    """
     # return redirect("https://lehre.bpm.in.tum.de/ports/5256/print-model")
     res = urllib.request.urlopen("http://3d-printer-1:4242/print-model")
     return res.read()
@@ -363,18 +416,30 @@ def printer1():
 
 @app.route('/printer2', methods=['GET'])
 def printer2():
+    """
+        This function calls printer
+        :return: message "success: printer2"
+    """
     res = urllib.request.urlopen("http://3d-printer-2:4242/print-model")
     return res.read()
 
 
 @app.route('/printer3', methods=['GET'])
 def printer3():
+    """
+    This function calls printer 3
+    :return: message "success: printer3"
+    """
     res = urllib.request.urlopen("http://3d-printer-3:4242/print-model")
     return res.read()
 
 
 @app.route('/start', methods=['GET'])
 def set_start():
+    """
+    This function set the start time of the processing and start_time will be used for calculating the total process time
+    :return: start time stamp
+    """
     global start_time
     start_time = time.time()
     return str(start_time)
@@ -382,6 +447,10 @@ def set_start():
 
 @app.route('/end', methods=['GET'])
 def set_end():
+    """
+    This function will calculate the process time since start
+    :return: the process time in secs
+    """
     if start_time is None:
         return 'Process not started yet!'
     end_time = time.time()
@@ -390,6 +459,7 @@ def set_end():
     return str(duration) + "s"
 
 
+# Ignore this function
 @app.route('/take-user/<string:username>', methods=['POST'])
 def take_user(username):
     """
@@ -438,6 +508,7 @@ def take_user(username):
     return res, 200
 
 
+# Ignore this function
 @app.route('/set-unoccupied/<string:username>', methods=['POST'])
 def set_unoccupied(username):
     """

@@ -187,7 +187,7 @@
       let occupied = false;
 
       shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="45">' +
-        '<text id="text-id" x="10" y="10" fill="black">' + name + '</text>' +
+        '<text id="text-id" x="10" y="20" fill="black">' + name + '</text>' +
               '<text id="attribute-id" x="10" y="40" fill="black">' + attribute + '</text>' +
         '<rect class="user-shape" x="0" y="0" width="200" height="45" style="fill:none;stroke:yellowgreen"/>' +
         '</svg>';
@@ -203,7 +203,7 @@
     if (tool === "operation") {
       shape.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">' +
               '<text id="text-id" x="10" y="60">' + name + '</text>' +
-              '<text id="domain-id" x="10" y="10">' + domainName + '</text>' +
+              '<text id="domain-id" x="10" y="20">' + domainName + '</text>' +
               '<rect class="operation-shape" x="0" y="0" width="100" height="100" style="fill:none;stroke:black"/> </svg>';
       shape.type = "operation";
       shape.name = "operation-" + name;

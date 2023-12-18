@@ -1,3 +1,7 @@
+"""
+Could be useful for the discussion chapter
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import beta
